@@ -37,6 +37,12 @@ class Reader(PdfViewerWidget):
             self.scroll_up_page()
         elif event.type() == event.Type.KeyPress and event.key() in [Qt.Key.Key_PageUp, Qt.Key.Key_U]:
             self.scroll_down_page()
+        elif event.type() == event.Type.KeyPress and event.key()  == Qt.Key.Key_Minus:
+            self.zoom_out()
+        elif event.type() == event.Type.KeyPress and event.key() == Qt.Key.Key_Equal:
+            self.zoom_in()
+        elif event.type() == event.Type.KeyPress and event.key() == Qt.Key.Key_0:
+            self.zoom_reset()
         elif event.type() == event.Type.KeyPress and event.key() == Qt.Key.Key_Escape:
             self.close()
             
@@ -60,8 +66,7 @@ def scroll_step(reader, start_time):
         end_time = time.time()
         print(f"test_scroll {reader.scroll_steps} up cost: {end_time - start_time}")
 
-def profile_scroll_step():
-    steps = 150
+def profile_scroll_step(steps=150):
     profiler = cProfile.Profile()
     profiler.enable()
     test_scroll(reader, steps)
@@ -99,7 +104,7 @@ if __name__ == "__main__":
 
     reader.show()
     if args.scroll:
-        profile_scroll_step()
+        profile_scroll_step(steps=1500)
 
     
     sys.exit(app.exec())

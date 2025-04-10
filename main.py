@@ -8,8 +8,8 @@ sys.path.append(
 from eaf_pdf_widget import PdfViewerWidget
 
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtGui import QColor
-from PyQt6.QtCore import Qt, QTimer, QCoreApplication
+from PyQt6.QtGui import QColor,  QMouseEvent, QCursor
+from PyQt6.QtCore import Qt, QTimer, QEvent, QPointF
 from core.utils import get_emacs_vars, SynctexInfo
 import argparse
 import time
@@ -82,16 +82,82 @@ def profile_scroll_step(steps=150):
         stats.print_stats(15)
     
     reader.quit() # raise exception to quit
+    
+def test_select(reader):
+    reader.jump_to_page(27, 200)
+
+    # Define the starting and ending coordinates for the selection
+    start_pos = QPointF(700, 30)
+    end_pos = QPointF(1100, 970)
+
+    reader.setMouseTracking(False)
+    QCursor.setPos(start_pos.toPoint())
+    
+    steps = 30  # Number of steps to move
+    current_step = 0
+    reader.select_timer = QTimer()
+ 
+
+    delta_x = (end_pos.x() - start_pos.x()) / steps
+    delta_y = (end_pos.y() - start_pos.y()) / steps
+
+    current_pos = start_pos
+    def move_mouse():
+        nonlocal current_step, current_pos
+        if current_step < steps:
+            current_pos.setX(int(current_pos.x() + delta_x))
+            current_pos.setY(int(current_pos.y() + delta_y))
+
+            # Create and send a mouse move event
+            mouse_move_event = QMouseEvent(
+                QEvent.Type.MouseMove,
+                current_pos,
+                Qt.MouseButton.LeftButton,
+                Qt.MouseButton.LeftButton,
+                Qt.KeyboardModifier.NoModifier,
+            )
+            QApplication.postEvent(reader, mouse_move_event)
+            QCursor.setPos(current_pos.toPoint())
+        
+            current_step += 1
+        else:
+            # Send mouse button up event
+            reader.setMouseTracking(True)
+            reader.select_timer.stop()
+    
+    reader.select_timer.timeout.connect(move_mouse)
+    reader.select_timer.start(10)
+    
+def profile_select(reader):
+    profiler = cProfile.Profile()
+    profiler.enable()
+    test_select(reader)
+    while reader.select_timer.isActive():  # 等待定时器结束
+        app.processEvents()
+    profiler.disable()
+    stats = pstats.Stats(profiler).sort_stats('cumtime')
+    
+    # save first 15 lines to file
+    datetime = time.strftime("%Y%m%d_%H-%M-%S", time.localtime())
+    with open(f"logs/select-{datetime}.prof", "w") as f:
+        stats.stream = f
+        stats.print_stats(15)
+    
+    reader.quit() # raise exception to quit
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="EAF PDF Viewer")
     parser.add_argument("--scroll", action="store_true", help="profile scroll")
-    # parser.add_argument(
-    #     "--file", "-f", type=str, required=True, help="Path to the PDF file"
-    # )
+    parser.add_argument(
+        "--select", action="store_true", help="profile select text"
+    )
+    elisp = "/data/resource/readings/manual/emacs/elisp.pdf"
+    parser.add_argument(
+        "--file", "-f", type=str, default=elisp, help="file path"
+    )
     args = parser.parse_args()
-    # file_path = args.file
-    file_path = "/data/resource/readings/manual/emacs/elisp.pdf"
+    file_path = args.file
+    
     app = QApplication(sys.argv)
     (background_color,) = get_emacs_vars(["eaf-buffer-background-color"])
     reader = Reader(
@@ -105,6 +171,8 @@ if __name__ == "__main__":
     reader.show()
     if args.scroll:
         profile_scroll_step(steps=1500)
+    elif args.select:
+        profile_select(reader)
 
     
     sys.exit(app.exec())

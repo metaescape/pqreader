@@ -55,7 +55,7 @@ def test_scroll(reader, steps=100):
     reader.scroll_count = 0
     reader.scroll_timer = QTimer()
     reader.scroll_timer.timeout.connect(lambda: scroll_step(reader, start_time))
-    reader.scroll_timer.start(30) 
+    reader.scroll_timer.start(2) 
 
 def scroll_step(reader, start_time):
     if reader.scroll_count < reader.scroll_steps:
@@ -141,7 +141,7 @@ def profile_select(reader):
     datetime = time.strftime("%Y%m%d_%H-%M-%S", time.localtime())
     with open(f"logs/select-{datetime}.prof", "w") as f:
         stats.stream = f
-        stats.print_stats(15)
+        stats.print_stats(30)
     
     reader.quit() # raise exception to quit
 

@@ -38,6 +38,24 @@ python main.py -f /path/to/file.pdf
 python main.py -f /path/to/file.epub
 ```
 
+## Features and Extension
+Currently , it provides the core features of a pdf/epub reader:
+- smooth scrolling
+- text selection
+- mouse cursor hover detection
+- link jumping
+
+But the full potential of a pdf/epub reader can be unlocked by extending the `Reader` class in `reader.py` with additional 
+Qt widgets, such as:
+
+- Adding a toolbar for quick access to common actions.
+- Integrating a right-click context menu for enhanced usability.
+- Implementing a search bar for efficient text search within documents.
+- Defining shortcut keys to streamline navigation and operations.
+- Introducing a Table of Contents (ToC) sidebar for better document structure navigation.
+
+all the functions that are needed to implement these features are already provided in `eaf-pdf-viewer`.
+
 ### test
 
 ```bash
@@ -50,16 +68,6 @@ python test.py -f /path/to/file.pdf --move
 
 checkout `test.py` for more test/profile options
 
-
-### development
-
-You can directly extend the Reader class in `reader.py` to add more interactive features. e.g.:
-- add a toolbar
-- add a right-click menu
-- add a search bar
-- add shortcut keys
-- add a Table of Contents sidebar
-...
 
 
 ## License

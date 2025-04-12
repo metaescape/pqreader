@@ -1,6 +1,6 @@
 VARS = {
-    # "eaf-buffer-background-color": "#242730",
-    "eaf-buffer-background-color": "#ffffff",
+    "eaf-buffer-background-color": "#242730",
+    # "eaf-buffer-background-color": "#ffffff",
     "eaf-pdf-store-history": False,
     "eaf-pdf-marker-fontsize": 12,
     "eaf-marker-letters": "abcdefghijklmnopqrstuvwxyz",

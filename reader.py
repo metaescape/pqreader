@@ -46,8 +46,7 @@ class Reader(PdfViewerWidget):
             # Copy to clipboard
             clipboard = QApplication.clipboard()
             clipboard.clear(mode=clipboard.Mode.Clipboard)
-            clipboard.setText(content, mode=clipboard.Mode.Clipboard)
-            self.cleanup_select()   
+            clipboard.setText(content, mode=clipboard.Mode.Clipboard)  
         elif keypressed and modifiers == CONTROL and key == Qt.Key.Key_C:
             content = self.parse_select_obj_list()
             # Copy to clipboard

@@ -77,6 +77,8 @@ def profile_scroll_step(steps=150):
     
     # save first 15 lines to file
     datetime = time.strftime("%Y%m%d_%H-%M-%S", time.localtime())
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
     with open(f"logs/scroll_{steps}-{datetime}.prof", "w") as f:
         stats.stream = f
         stats.print_stats(15)
@@ -139,7 +141,61 @@ def profile_select(reader):
     
     # save first 15 lines to file
     datetime = time.strftime("%Y%m%d_%H-%M-%S", time.localtime())
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
     with open(f"logs/select-{datetime}.prof", "w") as f:
+        stats.stream = f
+        stats.print_stats(30)
+    
+    reader.quit() # raise exception to quit
+    
+def random_move(reader, steps=100):
+    reader.jump_to_page(3, 200)
+
+    # Define the starting and ending coordinates for the selection
+    x0, y0, x1, y1 = 700, 30, 1100, 970
+    
+    current_step = 0
+    reader.select_timer = QTimer()
+    import random
+    random.seed(2025)
+    
+    def move_mouse():
+        nonlocal current_step
+        if current_step < steps:
+            # Create and send a mouse move event
+            x, y = random.randint(x0, x1), random.randint(y0, y1)
+            current_pos = QPointF(x, y)
+            mouse_move_event = QMouseEvent(
+                QEvent.Type.MouseMove,
+                current_pos,
+                Qt.MouseButton.LeftButton,
+                Qt.MouseButton.LeftButton,
+                Qt.KeyboardModifier.NoModifier,
+            )
+            QApplication.postEvent(reader, mouse_move_event)
+            QCursor.setPos(current_pos.toPoint())
+            current_step += 1
+        else:
+            reader.select_timer.stop()
+    
+    reader.select_timer.timeout.connect(move_mouse)
+    reader.select_timer.start(1)
+    
+def profile_random_move(reader, steps=1000):
+    profiler = cProfile.Profile()
+    profiler.enable()
+    random_move(reader,steps)
+    while reader.select_timer.isActive():  # 等待定时器结束
+        app.processEvents()
+    profiler.disable()
+    stats = pstats.Stats(profiler).sort_stats('cumtime')
+    
+    # save first 15 lines to file
+    datetime = time.strftime("%Y%m%d_%H-%M-%S", time.localtime())
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
+    with open(f"logs/move_{steps}-{datetime}.prof", "w") as f:
         stats.stream = f
         stats.print_stats(30)
     
@@ -154,6 +210,9 @@ if __name__ == "__main__":
     elisp = "/data/resource/readings/manual/emacs/elisp.pdf"
     parser.add_argument(
         "--file", "-f", type=str, default=elisp, help="file path"
+    )
+    parser.add_argument(
+        "--move", action="store_true", help="profile random move"
     )
     args = parser.parse_args()
     file_path = args.file
@@ -173,6 +232,8 @@ if __name__ == "__main__":
         profile_scroll_step(steps=1500)
     elif args.select:
         profile_select(reader)
+    elif args.move:
+        profile_random_move(reader, steps=2000)
 
     
     sys.exit(app.exec())

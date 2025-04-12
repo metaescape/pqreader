@@ -1,6 +1,7 @@
 import os
 import fitz  # PyMuPDF
 import pymupdf
+pymupdf.TOOLS.unset_quad_corrections(True) 
 import os
 import time
 
@@ -287,7 +288,44 @@ def test_color():
                 )
                 print("Text: '%s'" % s["text"])  # simple print of text
                 print(font_properties)
+                
+def test_blocks():
+    
+    path = "/data/resource/readings/papers/2024-qiShapeLLM.pdf"
+    doc = pymupdf.open(path)
+    # cat = doc.pdf_catalog()  # get the xref of the catalog
+    # doc.xref_set_key(cat, "StructTreeRoot", "null") 
+    
+    
+    page_2 = doc[1]
+    
+    raw_dict = page_2.get_text("rawdict", flags=pymupdf.TEXT_ACCURATE_BBOXES)
+    import json
+    os.makedirs("logs", exist_ok=True)
+    with open("logs/shapellm2blocks.json", "w", encoding="utf-8") as f:
+        json.dump(raw_dict, f, indent=4, ensure_ascii=False)
 
+    lines_list = []
+    spans_list = []
+    chars_list = []
+
+    for block in raw_dict["blocks"]:
+        if "lines" in block:
+            lines_list += block["lines"]
+
+    for line in lines_list:
+        if "spans" in line:
+            spans_list += line["spans"]
+
+    for span in spans_list:
+        if "chars" in span:
+            chars_list += span["chars"]
+    chars = []
+    for ch in chars_list:
+        chars.append(ch["c"])
+        
+    print("".join(chars))
+    # print(page_2.get_text())
 
 if __name__ == "__main__":
     import argparse
@@ -306,6 +344,9 @@ if __name__ == "__main__":
         "--count", action="store_true", help="Test page counts in PDF"
     )
     parser.add_argument("--color", action="store_true", help="Test color in PDF")
+    parser.add_argument(
+        "--blocks", action="store_true", help="Test blocks in PDF"
+    )
     
     args = parser.parse_args()
     # 如果没有提供参数，则使用默认路径
@@ -333,3 +374,6 @@ if __name__ == "__main__":
     elif args.color:
         print("test color")
         test_color()
+    elif args.blocks:
+        print("test blocks")
+        test_blocks()

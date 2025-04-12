@@ -2,8 +2,16 @@ import os
 import fitz  # PyMuPDF
 import pymupdf
 pymupdf.TOOLS.unset_quad_corrections(True) 
-import os
 import time
+from PyQt6.QtGui import  QMouseEvent, QCursor
+from PyQt6.QtCore import Qt, QTimer, QEvent, QPointF
+from PyQt6.QtWidgets import QApplication
+import argparse
+import cProfile
+import pstats
+from reader import get_reader
+import sys
+  
 
 def merge_pdfs(input_directory, output_file):
     # 获取目录下所有的 PDF 文件
@@ -326,10 +334,171 @@ def test_blocks():
         
     print("".join(chars))
     # print(page_2.get_text())
+    
+def test_scroll(reader, steps=100):
+    start_time = time.time()
+    reader.scroll_steps = steps
+    reader.scroll_count = 0
+    reader.scroll_timer = QTimer()
+    reader.scroll_timer.timeout.connect(lambda: scroll_step(reader, start_time))
+    reader.scroll_timer.start(2) 
+
+def scroll_step(reader, start_time):
+    if reader.scroll_count < reader.scroll_steps:
+        reader.scroll_up()  # 将 scroll_down() 替换为 scroll_up()
+        reader.scroll_count += 1
+    else:
+        reader.scroll_timer.stop()
+        end_time = time.time()
+        print(f"test_scroll {reader.scroll_steps} up cost: {end_time - start_time}")
+
+def profile_scroll_step(steps=150):
+    profiler = cProfile.Profile()
+    profiler.enable()
+    test_scroll(reader, steps)
+    while reader.scroll_timer.isActive():  # 等待定时器结束
+        app.processEvents()
+    profiler.disable()
+    stats = pstats.Stats(profiler).sort_stats('cumtime')
+    
+    # save first 15 lines to file
+    datetime = time.strftime("%Y%m%d_%H-%M-%S", time.localtime())
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
+    with open(f"logs/scroll_{steps}-{datetime}.prof", "w") as f:
+        stats.stream = f
+        stats.print_stats(15)
+    
+    reader.quit() # raise exception to quit
+    
+def test_select(reader):
+    reader.jump_to_page(27, 200)
+
+    # Define the starting and ending coordinates for the selection
+    start_pos = QPointF(700, 30)
+    end_pos = QPointF(1100, 970)
+
+    reader.setMouseTracking(False)
+    QCursor.setPos(start_pos.toPoint())
+    
+    steps = 30  # Number of steps to move
+    current_step = 0
+    reader.select_timer = QTimer()
+ 
+
+    delta_x = (end_pos.x() - start_pos.x()) / steps
+    delta_y = (end_pos.y() - start_pos.y()) / steps
+
+    current_pos = start_pos
+    def move_mouse():
+        nonlocal current_step, current_pos
+        if current_step < steps:
+            current_pos.setX(int(current_pos.x() + delta_x))
+            current_pos.setY(int(current_pos.y() + delta_y))
+
+            # Create and send a mouse move event
+            mouse_move_event = QMouseEvent(
+                QEvent.Type.MouseMove,
+                current_pos,
+                Qt.MouseButton.LeftButton,
+                Qt.MouseButton.LeftButton,
+                Qt.KeyboardModifier.NoModifier,
+            )
+            QApplication.postEvent(reader, mouse_move_event)
+            QCursor.setPos(current_pos.toPoint())
+        
+            current_step += 1
+        else:
+            # Send mouse button up event
+            reader.setMouseTracking(True)
+            reader.select_timer.stop()
+    
+    reader.select_timer.timeout.connect(move_mouse)
+    reader.select_timer.start(10)
+    
+def profile_select(reader):
+    profiler = cProfile.Profile()
+    profiler.enable()
+    test_select(reader)
+    while reader.select_timer.isActive():  # 等待定时器结束
+        app.processEvents()
+    profiler.disable()
+    stats = pstats.Stats(profiler).sort_stats('cumtime')
+    
+    # save first 15 lines to file
+    datetime = time.strftime("%Y%m%d_%H-%M-%S", time.localtime())
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
+    with open(f"logs/select-{datetime}.prof", "w") as f:
+        stats.stream = f
+        stats.print_stats(30)
+    
+    reader.quit() # raise exception to quit
+    
+def random_move(reader, steps=100):
+    reader.jump_to_page(3, 200)
+
+    # Define the starting and ending coordinates for the selection
+    x0, y0, x1, y1 = 700, 30, 1100, 970
+    
+    current_step = 0
+    reader.select_timer = QTimer()
+    import random
+    random.seed(2025)
+    
+    def move_mouse():
+        nonlocal current_step
+        if current_step < steps:
+            # Create and send a mouse move event
+            x, y = random.randint(x0, x1), random.randint(y0, y1)
+            current_pos = QPointF(x, y)
+            mouse_move_event = QMouseEvent(
+                QEvent.Type.MouseMove,
+                current_pos,
+                Qt.MouseButton.LeftButton,
+                Qt.MouseButton.LeftButton,
+                Qt.KeyboardModifier.NoModifier,
+            )
+            QApplication.postEvent(reader, mouse_move_event)
+            QCursor.setPos(current_pos.toPoint())
+            current_step += 1
+        else:
+            reader.select_timer.stop()
+    
+    reader.select_timer.timeout.connect(move_mouse)
+    reader.select_timer.start(1)
+    
+def profile_random_move(reader, steps=1000):
+    profiler = cProfile.Profile()
+    profiler.enable()
+    random_move(reader,steps)
+    while reader.select_timer.isActive():  # 等待定时器结束
+        app.processEvents()
+    profiler.disable()
+    stats = pstats.Stats(profiler).sort_stats('cumtime')
+    
+    # save first 15 lines to file
+    datetime = time.strftime("%Y%m%d_%H-%M-%S", time.localtime())
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
+    with open(f"logs/move_{steps}-{datetime}.prof", "w") as f:
+        stats.stream = f
+        stats.print_stats(30)
+    
+    reader.quit() # raise exception to quit
+
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="pymupdf test")
+            
+    elisp = "/data/resource/readings/manual/emacs/elisp.pdf"
+
+    parser.add_argument(
+        "--file", "-f", type=str, default=elisp, help="file path"
+    )
+    
+    # args for static test
     parser.add_argument("--merge", action="store_true", help="Merge PDFs in the specified directory")
     parser.add_argument("--convert", action="store_true", help="Test EPUB to PDF conversion")
     parser.add_argument("--epub", action="store_true", help="Test search in EPUB")
@@ -348,16 +517,23 @@ if __name__ == "__main__":
         "--blocks", action="store_true", help="Test blocks in PDF"
     )
     
+    # args for dynamic profiling
+    parser.add_argument("--scroll", action="store_true", help="profile scroll")
+    parser.add_argument(
+        "--select", action="store_true", help="profile select text"
+    )
+    parser.add_argument(
+        "--move", action="store_true", help="profile random move"
+    )
     args = parser.parse_args()
-    # 如果没有提供参数，则使用默认路径
-    print(args)
+
+    
     if args.merge:
         test_merge_pdfs()
     elif args.convert:
         test_epub_to_pdf()
     elif args.epub:
         print("test search in epub")
- 
         test_search_in_epub()
     elif args.rect:
         print("test rect")
@@ -377,3 +553,15 @@ if __name__ == "__main__":
     elif args.blocks:
         print("test blocks")
         test_blocks()
+    else:
+        # dynamic profiling
+        app = QApplication(sys.argv)
+        reader = get_reader(args.file)
+        reader.show()
+        if args.scroll:
+            profile_scroll_step(steps=1500)
+        elif args.select:
+            profile_select(reader)
+        elif args.move:
+            profile_random_move(reader, steps=2000)
+        sys.exit(app.exec())

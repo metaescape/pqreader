@@ -63,7 +63,7 @@ all the methods that are needed to implement these features are already provided
 
 ```bash
 # profile fast scroll
-python test.py -f /path/to/file.pdf --sroll 
+python test.py -f /path/to/file.pdf --scroll 
 
 # profile cursor random move, you may need to modify the cursor range depending on your screen size
 python test.py -f /path/to/file.pdf --move 

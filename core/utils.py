@@ -28,7 +28,9 @@ class PostGui:
 
 class SynctexInfo:  # data class
     page_num = None
-
+    
+    def __getattr__(self, attr):
+        return lambda : None
 
 def interactive(func):
     return func

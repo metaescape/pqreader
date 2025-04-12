@@ -1,8 +1,8 @@
 # PQReader
 
-A simple and fast pdf and epub reader depending on PyQt6 and PyMuPDF .
+A minimalistic pdf and epub **Reader** depending on **P**yMuPDF and Py**Q**t6.
 
-The core functionality of PQReader is directly based on eaf-pdf-viewer .
+The core functionality of PQReader is directly based on [eaf-pdf-viewer](https://github.com/emacs-eaf/eaf-pdf-viewer) .
 
 ## Installation
 
@@ -38,20 +38,21 @@ python main.py -f /path/to/file.pdf
 python main.py -f /path/to/file.epub
 ```
 
-## Features and Extension
+## Features and Development
 Currently , it provides the core features of a pdf/epub reader:
 - smooth scrolling 
 - text selection (then C-c to copy)
 - cursor hover detection
 - link jumping (C-t to toggle the last position)
-- up/C-u and down/C-d to scroll half page
+- PGUP/up/C-u and PGDN/down/C-d to scroll half page
+- `=` to zoom in and `-` to zoom out, `0` to reset zoom
 - C-q to quit
 
 The full potential of a pdf/epub reader can be unlocked by extending the `Reader` class in `reader.py` with additional 
 Qt widgets, such as:
 
 - Add a toolbar for quick access to common actions.
-- Integrating a right-click context menu for enhanced usability.
+- Integrating a right-click context menu for text highlighting and annotations.
 - Implementing a search bar for efficient text search.
 - Add a Table of Contents (ToC) sidebar for better document navigation.
 

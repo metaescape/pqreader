@@ -27,18 +27,40 @@ python -m pip install --upgrade pip
 Then install the dependencies using pip:
 
 ```bash
-pip install PyQt6 PyQt6-Qt6 PyQt6-sip PyMuPDF
+pip install PyQt6 PyQt6-Qt6 PyQt6-sip PyMuPDF packaging
 ```
 
-
 ## Usage
+
+preview the pdf/epub file
 ```bash
 python main.py -f /path/to/file.pdf
 python main.py -f /path/to/file.epub
 ```
 
+### test
+
 ```bash
-python test.py -f /path/to/file.pdf --sroll # profile fast scroll
+# profile fast scroll
+python test.py -f /path/to/file.pdf --sroll 
+
+# profile cursor random move, you may need to modify the cursor range depending on your screen size
+python test.py -f /path/to/file.pdf --move 
 ```
 
-checkout `test.py` for more  test/profile options
+checkout `test.py` for more test/profile options
+
+
+### development
+
+You can directly extend the Reader class in `reader.py` to add more interactive features. e.g.:
+- add a toolbar
+- add a right-click menu
+- add a search bar
+- add shortcut keys
+- add a Table of Contents sidebar
+...
+
+
+## License
+GPL-3.0 (Same as the eaf-pdf-viewer)

@@ -19,44 +19,37 @@ class Reader(PdfViewerWidget):
     
     # keyboard shortcuts
     def eventFilter(self, obj, event):
-        keypressed = event.type() == event.Type.KeyPress
-        key = Qt.Key(event.key()) if keypressed else None
+        is_key_pressed = event.type() == event.Type.KeyPress
+        key = Qt.Key(event.key()) if is_key_pressed else None
         modifiers = QApplication.keyboardModifiers()
         
-        if keypressed and key == Qt.Key.Key_Home:
+        if is_key_pressed and key == Qt.Key.Key_Home:
             self.scroll_to_begin()
-        elif keypressed and key == Qt.Key.Key_End:
+        elif is_key_pressed and key == Qt.Key.Key_End:
             self.scroll_to_end()
-        elif keypressed and key in [Qt.Key.Key_J, ]:
+        elif is_key_pressed and key in [Qt.Key.Key_J, ]:
             self.scroll_up()
-        elif keypressed and key in [Qt.Key.Key_K]:
+        elif is_key_pressed and key in [Qt.Key.Key_K]:
             self.scroll_down()
-        elif keypressed and key in [Qt.Key.Key_PageDown, Qt.Key.Key_D, Qt.Key.Key_Down]:
+        elif is_key_pressed and key in [Qt.Key.Key_PageDown, Qt.Key.Key_D, Qt.Key.Key_Down]:
             self.scroll_up_page()
-        elif keypressed and key in [Qt.Key.Key_PageUp, Qt.Key.Key_U, Qt.Key.Key_Up]:
+        elif is_key_pressed and key in [Qt.Key.Key_PageUp, Qt.Key.Key_U, Qt.Key.Key_Up]:
             self.scroll_down_page()
-        elif keypressed and key == Qt.Key.Key_Minus:
+        elif is_key_pressed and key == Qt.Key.Key_Minus:
             self.zoom_out()
-        elif keypressed and key == Qt.Key.Key_Equal:
+        elif is_key_pressed and key == Qt.Key.Key_Equal:
             self.zoom_in()
-        elif keypressed and key == Qt.Key.Key_0:
+        elif is_key_pressed and key == Qt.Key.Key_0:
             self.zoom_reset()
-        elif keypressed and modifiers == CONTROL and key == Qt.Key.Key_C:
+        elif is_key_pressed and modifiers == CONTROL and key == Qt.Key.Key_C:
             content = self.parse_select_obj_list()
             # Copy to clipboard
             clipboard = QApplication.clipboard()
             clipboard.clear(mode=clipboard.Mode.Clipboard)
             clipboard.setText(content, mode=clipboard.Mode.Clipboard)  
-        elif keypressed and modifiers == CONTROL and key == Qt.Key.Key_C:
-            content = self.parse_select_obj_list()
-            # Copy to clipboard
-            clipboard = QApplication.clipboard()
-            clipboard.clear(mode=clipboard.Mode.Clipboard)
-            clipboard.setText(content, mode=clipboard.Mode.Clipboard)
-            self.cleanup_select()  
-        elif keypressed and modifiers == CONTROL and key == Qt.Key.Key_T:
+        elif is_key_pressed and modifiers == CONTROL and key == Qt.Key.Key_T:
             self.toggle_last_position()
-        elif keypressed and modifiers == CONTROL and key == Qt.Key.Key_Q:
+        elif is_key_pressed and modifiers == CONTROL and key == Qt.Key.Key_Q:
             self.close()
 
             

@@ -72,6 +72,5 @@ python test.py -f /path/to/file.pdf --move
 checkout `test.py` for more test/profile options
 
 
-
 ## License
 GPL-3.0 (Same as the eaf-pdf-viewer)

@@ -62,7 +62,7 @@ all the methods that are needed to implement these features are already provided
 ### test
 
 ```bash
-# profile fast scroll
+# profile fast scroll, it will generate a report in logs/ directory
 python test.py -f /path/to/file.pdf --scroll 
 
 # profile cursor random move, you may need to modify the cursor range depending on your screen size
